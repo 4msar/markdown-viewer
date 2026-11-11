@@ -4,6 +4,7 @@ import {
   BetweenVerticalEnd,
   Bold,
   Code,
+  CodeXml,
   Columns2,
   Eye,
   FileUp,
@@ -34,7 +35,7 @@ import {
 import { ExportMenu, type ExportFormat } from "./ExportMenu.tsx";
 import { IconButton, ToolbarDivider } from "./IconButton.tsx";
 
-export type Layout = "split" | "editor" | "preview";
+export type Layout = "split" | "editor" | "source" | "preview";
 export type Theme = "light" | "dark";
 
 type ToolbarProps = {
@@ -90,8 +91,8 @@ export function Toolbar({
     }),
   });
 
-  // Formatting only applies while the editor is on screen.
-  const off = layout === "preview";
+  // Formatting only applies while the rich editor is on screen.
+  const off = layout === "preview" || layout === "source";
   const run = () => editor.chain().focus();
 
   return (
@@ -289,6 +290,13 @@ export function Toolbar({
             toggle
             active={layout === "editor"}
             onClick={() => onLayoutChange("editor")}
+          />
+          <IconButton
+            icon={CodeXml}
+            label="Raw markdown"
+            toggle
+            active={layout === "source"}
+            onClick={() => onLayoutChange("source")}
           />
           <IconButton
             icon={Eye}

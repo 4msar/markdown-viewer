@@ -43,7 +43,10 @@ export default function App() {
       setNotice(result.error);
       return;
     }
-    if (!editor.isEmpty && !window.confirm(`Replace the current document with "${file.name}"?`)) {
+    if (
+      markdown.trim() !== "" &&
+      !window.confirm(`Replace the current document with "${file.name}"?`)
+    ) {
       return;
     }
     editor.commands.setContent(result.text, { contentType: "markdown" });
@@ -53,8 +56,19 @@ export default function App() {
 
   const dragging = useFileDrop((file) => void openFile(file));
 
+  /** Raw edits only reach the rich editor when it is needed again. */
+  const syncEditorFromSource = () => {
+    editor.commands.setContent(markdown, { contentType: "markdown", emitUpdate: false });
+  };
+
+  const changeLayout = (next: Layout) => {
+    if (layout === "source" && next !== "source") syncEditorFromSource();
+    setLayout(next);
+  };
+
   const exportAs = (format: ExportFormat) => {
     const name = safeFileName(fileName);
+    if (layout === "source") syncEditorFromSource();
     const current = editor.getMarkdown();
     if (format === "md") {
       downloadFile(`${name}.md`, current, "text/markdown");
@@ -74,21 +88,21 @@ export default function App() {
   };
 
   const clearDocument = () => {
-    if (editor.isEmpty || !window.confirm("Clear the whole document?")) return;
+    if (markdown.trim() === "" || !window.confirm("Clear the whole document?")) return;
     editor.commands.clearContent(true);
     setMarkdown("");
     setFileName("document");
   };
 
-  const showEditor = layout !== "preview";
-  const showPreview = layout !== "editor";
+  const showEditor = layout === "split" || layout === "editor";
+  const showPreview = layout === "split" || layout === "preview";
 
   return (
     <div className="print-root flex h-full flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <Toolbar
         editor={editor}
         layout={layout}
-        onLayoutChange={setLayout}
+        onLayoutChange={changeLayout}
         theme={theme}
         onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         onImport={() => fileInputRef.current?.click()}
@@ -126,6 +140,22 @@ export default function App() {
           <EditorContent
             editor={editor}
             className={`h-full ${layout === "editor" ? "mx-auto max-w-4xl" : ""}`}
+          />
+        </section>
+
+        <section
+          aria-label="Raw markdown"
+          hidden={layout !== "source"}
+          className={`no-print ${PANE}`}
+        >
+          <textarea
+            aria-label="Raw markdown source"
+            value={markdown}
+            onChange={(event) => setMarkdown(event.target.value)}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            className="mx-auto block h-full w-full max-w-4xl resize-none bg-transparent px-6 py-5 font-mono text-sm leading-relaxed outline-none"
           />
         </section>
 
