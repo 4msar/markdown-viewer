@@ -2,13 +2,83 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Live markdown editor and viewer" />
-    <title>Markdown Viewer</title>
+    <title>Markdown Viewer — Live Markdown Editor and Preview</title>
+    <meta
+      name="description"
+      content="Free online markdown editor with a live preview. Write in a rich text editor or raw markdown, open .md and .txt files by drag and drop, and export to Markdown, HTML, plain text or PDF."
+    />
+    <meta
+      name="keywords"
+      content="markdown editor, markdown viewer, markdown preview, live markdown, online markdown editor, md to html, md to pdf"
+    />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Markdown Viewer" />
+    <meta name="apple-mobile-web-app-title" content="Markdown Viewer" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#18181b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Markdown Viewer" />
+    <meta property="og:title" content="Markdown Viewer — Live Markdown Editor and Preview" />
+    <meta
+      property="og:description"
+      content="Write in a rich text editor or raw markdown with a live preview. Import .md and .txt files, export to Markdown, HTML, plain text or PDF."
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Markdown Viewer: raw markdown on the left and its rendered preview on the right"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Markdown Viewer — Live Markdown Editor and Preview" />
+    <meta
+      name="twitter:description"
+      content="Write in a rich text editor or raw markdown with a live preview. Import .md and .txt files, export to Markdown, HTML, plain text or PDF."
+    />
+
+    <meta name="twitter:image" content="/og-image.png" />
+    <meta
+      name="twitter:image:alt"
+      content="Markdown Viewer: raw markdown on the left and its rendered preview on the right"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Markdown Viewer",
+        "description": "Online markdown editor with a live preview, file import and export to Markdown, HTML, plain text and PDF.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "Rich text markdown editor",
+          "Raw markdown editing",
+          "Live preview",
+          "Drag and drop .md and .txt import",
+          "Export to Markdown, HTML, plain text and PDF",
+          "Tables, task lists and syntax-highlighted code",
+          "Dark mode"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <noscript
+      >Markdown Viewer needs JavaScript to run. Enable it to edit and preview markdown.</noscript
+    >
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
