@@ -19,6 +19,8 @@ const PANE = "min-h-0 min-w-0 overflow-auto bg-white dark:bg-zinc-950";
 export default function App() {
   const [markdown, setMarkdown] = usePersistentState("mdv:doc", SAMPLE_MARKDOWN);
   const [layout, setLayout] = usePersistentState<Layout>("mdv:layout", "split");
+  // In side-by-side, the left pane can show raw markdown instead of the rich editor.
+  const [splitRaw, setSplitRaw] = usePersistentState("mdv:splitRaw", false);
   const [theme, setTheme] = usePersistentState<Theme>("mdv:theme", systemTheme);
   const [fileName, setFileName] = usePersistentState("mdv:name", "document");
   const [notice, setNotice] = useState<string | null>(null);
@@ -61,14 +63,18 @@ export default function App() {
     editor.commands.setContent(markdown, { contentType: "markdown", emitUpdate: false });
   };
 
-  const changeLayout = (next: Layout) => {
-    if (layout === "source" && next !== "source") syncEditorFromSource();
-    setLayout(next);
+  const isRaw = (l: Layout, raw: boolean) => l === "source" || (l === "split" && raw);
+  const rawActive = isRaw(layout, splitRaw);
+
+  const applyView = (nextLayout: Layout, nextSplitRaw: boolean) => {
+    if (rawActive && !isRaw(nextLayout, nextSplitRaw)) syncEditorFromSource();
+    if (nextLayout !== layout) setLayout(nextLayout);
+    if (nextSplitRaw !== splitRaw) setSplitRaw(nextSplitRaw);
   };
 
   const exportAs = (format: ExportFormat) => {
     const name = safeFileName(fileName);
-    if (layout === "source") syncEditorFromSource();
+    if (rawActive) syncEditorFromSource();
     const current = editor.getMarkdown();
     if (format === "md") {
       downloadFile(`${name}.md`, current, "text/markdown");
@@ -94,7 +100,7 @@ export default function App() {
     setFileName("document");
   };
 
-  const showEditor = layout === "split" || layout === "editor";
+  const showEditor = layout === "editor" || (layout === "split" && !splitRaw);
   const showPreview = layout === "split" || layout === "preview";
 
   return (
@@ -102,7 +108,9 @@ export default function App() {
       <Toolbar
         editor={editor}
         layout={layout}
-        onLayoutChange={changeLayout}
+        onLayoutChange={(next) => applyView(next, splitRaw)}
+        splitRaw={splitRaw}
+        onToggleSplitRaw={() => applyView(layout, !splitRaw)}
         theme={theme}
         onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         onImport={() => fileInputRef.current?.click()}
@@ -145,8 +153,12 @@ export default function App() {
 
         <section
           aria-label="Raw markdown"
-          hidden={layout !== "source"}
-          className={`no-print ${PANE}`}
+          hidden={!rawActive}
+          className={`no-print ${PANE} ${
+            layout === "split"
+              ? "border-b border-zinc-200 md:border-r md:border-b-0 dark:border-zinc-800"
+              : ""
+          }`}
         >
           <textarea
             aria-label="Raw markdown source"
@@ -155,7 +167,7 @@ export default function App() {
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
-            className="mx-auto block h-full w-full max-w-4xl resize-none bg-transparent px-6 py-5 font-mono text-sm leading-relaxed outline-none"
+            className={`block h-full w-full resize-none ${layout === "source" ? "mx-auto max-w-4xl" : ""} bg-transparent px-6 py-5 font-mono text-sm leading-relaxed outline-none`}
           />
         </section>
 

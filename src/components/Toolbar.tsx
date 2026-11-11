@@ -22,6 +22,7 @@ import {
   PencilLine,
   Pilcrow,
   Redo2,
+  RemoveFormatting,
   SquareCode,
   Strikethrough,
   Sun,
@@ -42,6 +43,9 @@ type ToolbarProps = {
   editor: Editor;
   layout: Layout;
   onLayoutChange: (layout: Layout) => void;
+  /** Side-by-side only: left pane shows raw markdown instead of the rich editor. */
+  splitRaw: boolean;
+  onToggleSplitRaw: () => void;
   theme: Theme;
   onToggleTheme: () => void;
   onImport: () => void;
@@ -62,6 +66,8 @@ export function Toolbar({
   editor,
   layout,
   onLayoutChange,
+  splitRaw,
+  onToggleSplitRaw,
   theme,
   onToggleTheme,
   onImport,
@@ -92,7 +98,7 @@ export function Toolbar({
   });
 
   // Formatting only applies while the rich editor is on screen.
-  const off = layout === "preview" || layout === "source";
+  const off = layout === "preview" || layout === "source" || (layout === "split" && splitRaw);
   const run = () => editor.chain().focus();
 
   return (
@@ -306,6 +312,14 @@ export function Toolbar({
             onClick={() => onLayoutChange("preview")}
           />
         </div>
+        <IconButton
+          icon={RemoveFormatting}
+          label="Raw markdown in left pane (side by side)"
+          toggle
+          active={layout === "split" && splitRaw}
+          disabled={layout !== "split"}
+          onClick={onToggleSplitRaw}
+        />
         <ToolbarDivider />
         <IconButton icon={FileUp} label="Import .md or .txt file" onClick={onImport} />
         <ExportMenu onExport={onExport} />
