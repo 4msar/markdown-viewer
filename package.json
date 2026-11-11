@@ -8,6 +8,7 @@
     "build": "tsc -b && vp build",
     "lint": "vp lint",
     "preview": "vp preview",
+    "deploy": "vp run build && wrangler deploy",
     "prepare": "vp config"
   },
   "dependencies": {
@@ -42,13 +43,7 @@
     "tailwindcss": "^4.3.5",
     "typescript": "~7.0.2",
     "vite": "catalog:",
-    "vite-plus": "catalog:"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.18.0",
-      "onFail": "download"
-    }
+    "vite-plus": "catalog:",
+    "wrangler": "^4.159.0"
   }
 }

@@ -30,3 +30,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Cloudflare Wrangler
+.wrangler
+.dev.vars*
