@@ -8,3 +8,7 @@ peerDependencyRules:
     - vite
   allowedVersions:
     vite: "*"
+# Dependencies allowed to run install scripts (both come with wrangler).
+allowBuilds:
+  esbuild: true
+  workerd: true
