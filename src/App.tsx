@@ -1,102 +1,164 @@
-import { useState } from "react";
-import heroImg from "./assets/hero.png";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
-import "./App.css";
+import { EditorContent } from "@tiptap/react";
+import { FileDown } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { ExportFormat } from "./components/ExportMenu.tsx";
+import { Toolbar, type Layout, type Theme } from "./components/Toolbar.tsx";
+import { useFileDrop } from "./hooks/useFileDrop.ts";
+import { useMarkdownEditor } from "./hooks/useMarkdownEditor.ts";
+import { usePersistentState } from "./hooks/usePersistentState.ts";
+import { buildHtmlDocument, downloadFile, safeFileName } from "./lib/exportFile.ts";
+import { FILE_ACCEPT, importFile } from "./lib/importFile.ts";
+import { renderMarkdown } from "./lib/renderMarkdown.ts";
+import { SAMPLE_MARKDOWN } from "./lib/sample.ts";
 
-function App() {
-  const [count, setCount] = useState(0);
+const systemTheme = (): Theme =>
+  window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+const PANE = "min-h-0 min-w-0 overflow-auto bg-white dark:bg-zinc-950";
+
+export default function App() {
+  const [markdown, setMarkdown] = usePersistentState("mdv:doc", SAMPLE_MARKDOWN);
+  const [layout, setLayout] = usePersistentState<Layout>("mdv:layout", "split");
+  const [theme, setTheme] = usePersistentState<Theme>("mdv:theme", systemTheme);
+  const [fileName, setFileName] = usePersistentState("mdv:name", "document");
+  const [notice, setNotice] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const editor = useMarkdownEditor(markdown, setMarkdown);
+  const previewHtml = useMemo(() => renderMarkdown(markdown), [markdown]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const openFile = async (file: File) => {
+    const result = await importFile(file);
+    if (!result.ok) {
+      setNotice(result.error);
+      return;
+    }
+    if (!editor.isEmpty && !window.confirm(`Replace the current document with "${file.name}"?`)) {
+      return;
+    }
+    editor.commands.setContent(result.text, { contentType: "markdown" });
+    setMarkdown(editor.getMarkdown());
+    setFileName(result.name);
+  };
+
+  const dragging = useFileDrop((file) => void openFile(file));
+
+  const exportAs = (format: ExportFormat) => {
+    const name = safeFileName(fileName);
+    const current = editor.getMarkdown();
+    if (format === "md") {
+      downloadFile(`${name}.md`, current, "text/markdown");
+    } else if (format === "html") {
+      downloadFile(`${name}.html`, buildHtmlDocument(name, renderMarkdown(current)), "text/html");
+    } else if (format === "txt") {
+      downloadFile(`${name}.txt`, editor.getText({ blockSeparator: "\n\n" }), "text/plain");
+    } else {
+      // Print the preview on a light page whatever the current theme.
+      setMarkdown(current);
+      const root = document.documentElement;
+      const wasDark = root.classList.contains("dark");
+      root.classList.remove("dark");
+      window.print();
+      root.classList.toggle("dark", wasDark);
+    }
+  };
+
+  const clearDocument = () => {
+    if (editor.isEmpty || !window.confirm("Clear the whole document?")) return;
+    editor.commands.clearContent(true);
+    setMarkdown("");
+    setFileName("document");
+  };
+
+  const showEditor = layout !== "preview";
+  const showPreview = layout !== "editor";
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button type="button" className="counter" onClick={() => setCount((count) => count + 1)}>
-          Count is {count}
-        </button>
-      </section>
+    <div className="print-root flex h-full flex-col bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <Toolbar
+        editor={editor}
+        layout={layout}
+        onLayoutChange={setLayout}
+        theme={theme}
+        onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+        onImport={() => fileInputRef.current?.click()}
+        onExport={exportAs}
+        onClear={clearDocument}
+      />
 
-      <div className="ticks"></div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={FILE_ACCEPT}
+        hidden
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void openFile(file);
+        }}
+      />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <main
+        className={`print-root grid min-h-0 flex-1 ${
+          layout === "split" ? "grid-rows-2 md:grid-cols-2 md:grid-rows-1" : "grid-cols-1"
+        }`}
+      >
+        {/* Stays mounted in every layout so undo history and selection survive. */}
+        <section
+          aria-label="Editor"
+          hidden={!showEditor}
+          className={`no-print ${PANE} ${
+            layout === "split"
+              ? "border-b border-zinc-200 md:border-r md:border-b-0 dark:border-zinc-800"
+              : ""
+          }`}
+        >
+          <EditorContent
+            editor={editor}
+            className={`h-full ${layout === "editor" ? "mx-auto max-w-4xl" : ""}`}
+          />
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <section aria-label="Preview" hidden={!showPreview} className={`print-pane ${PANE}`}>
+          <article
+            className={`markdown-body prose prose-zinc dark:prose-invert max-w-none px-6 py-5 ${
+              layout === "preview" ? "mx-auto max-w-4xl" : ""
+            }`}
+            // Sanitized by DOMPurify in renderMarkdown.
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        </section>
+      </main>
+
+      {notice && (
+        <div
+          role="alert"
+          className="no-print fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white shadow-lg"
+        >
+          {notice}
+        </div>
+      )}
+
+      {dragging && (
+        <div
+          aria-hidden="true"
+          className="no-print pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10"
+        >
+          <div className="rounded-2xl border-2 border-dashed border-blue-500 bg-white/90 p-10 text-blue-600 dark:bg-zinc-900/90 dark:text-blue-400">
+            <FileDown size={56} strokeWidth={1.5} />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
-export default App;

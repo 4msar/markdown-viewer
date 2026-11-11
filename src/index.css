@@ -1,109 +1,204 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+:root.dark {
+  color-scheme: dark;
 }
 
+html,
+body,
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  height: 100%;
 }
 
 body {
   margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* Editor surface */
+.tiptap {
+  min-height: 100%;
+  outline: none;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+
+.tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
 }
-p {
+
+.tiptap ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.35rem;
+  user-select: none;
+}
+
+.tiptap ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tiptap ul[data-type="taskList"] li > div > p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+.tiptap .selectedCell {
+  background: color-mix(in srgb, currentColor 12%, transparent);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* Rendered task lists (marked output) */
+.markdown-body li:has(> input[type="checkbox"]),
+.markdown-body li:has(> p > input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.25rem;
+}
+
+.markdown-body li > input[type="checkbox"],
+.markdown-body li > p > input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Tables in both panes */
+.prose table {
+  display: block;
+  overflow-x: auto;
+}
+
+.prose :where(th, td) {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  padding: 0.4rem 0.75rem;
+}
+
+.prose :where(th, td) > p {
+  margin: 0;
+}
+
+/* Code highlighting: code blocks are dark in both themes */
+.prose pre code.hljs,
+.prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #8b949e;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag {
+  color: #ff7b72;
+}
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: #a5d6ff;
+}
+
+.hljs-number,
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-meta {
+  color: #79c0ff;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #d2a8ff;
+}
+
+.hljs-built_in,
+.hljs-type,
+.hljs-symbol,
+.hljs-bullet {
+  color: #ffa657;
+}
+
+.hljs-name,
+.hljs-tag {
+  color: #7ee787;
+}
+
+.hljs-deletion {
+  color: #ffa198;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+.toolbar-scroll {
+  scrollbar-width: none;
+}
+
+.toolbar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-root {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .print-pane {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    border: 0 !important;
+  }
+}
+
+/* Typography plugin wraps inline code in literal backticks; drop them. */
+.prose :where(code)::before,
+.prose :where(code)::after {
+  content: none;
+}
+
+.prose :not(pre) > code {
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  font-weight: 500;
+}
+
+/* Tiptap wraps list item text in paragraphs; match the preview's tight lists. */
+.tiptap li > p {
+  margin: 0;
 }
