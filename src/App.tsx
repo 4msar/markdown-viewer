@@ -6,6 +6,7 @@ import { Toolbar, type Layout, type Theme } from "./components/Toolbar.tsx";
 import { useFileDrop } from "./hooks/useFileDrop.ts";
 import { useMarkdownEditor } from "./hooks/useMarkdownEditor.ts";
 import { usePersistentState } from "./hooks/usePersistentState.ts";
+import { useScrollSync } from "./hooks/useScrollSync.ts";
 import { buildHtmlDocument, downloadFile, safeFileName } from "./lib/exportFile.ts";
 import { FILE_ACCEPT, importFile } from "./lib/importFile.ts";
 import { renderMarkdown } from "./lib/renderMarkdown.ts";
@@ -21,10 +22,15 @@ export default function App() {
   const [layout, setLayout] = usePersistentState<Layout>("mdv:layout", "split");
   // In side-by-side, the left pane can show raw markdown instead of the rich editor.
   const [splitRaw, setSplitRaw] = usePersistentState("mdv:splitRaw", false);
+  // In side-by-side, scrolling one pane scrolls the other.
+  const [scrollLock, setScrollLock] = usePersistentState("mdv:scrollLock", false);
   const [theme, setTheme] = usePersistentState<Theme>("mdv:theme", systemTheme);
   const [fileName, setFileName] = usePersistentState("mdv:name", "document");
   const [notice, setNotice] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorPaneRef = useRef<HTMLElement>(null);
+  const sourceRef = useRef<HTMLTextAreaElement>(null);
+  const previewPaneRef = useRef<HTMLElement>(null);
 
   const editor = useMarkdownEditor(markdown, setMarkdown);
   const previewHtml = useMemo(() => renderMarkdown(markdown), [markdown]);
@@ -65,6 +71,12 @@ export default function App() {
 
   const isRaw = (l: Layout, raw: boolean) => l === "source" || (l === "split" && raw);
   const rawActive = isRaw(layout, splitRaw);
+
+  useScrollSync(
+    scrollLock && layout === "split",
+    rawActive ? sourceRef : editorPaneRef,
+    previewPaneRef,
+  );
 
   const applyView = (nextLayout: Layout, nextSplitRaw: boolean) => {
     if (rawActive && !isRaw(nextLayout, nextSplitRaw)) syncEditorFromSource();
@@ -111,6 +123,8 @@ export default function App() {
         onLayoutChange={(next) => applyView(next, splitRaw)}
         splitRaw={splitRaw}
         onToggleSplitRaw={() => applyView(layout, !splitRaw)}
+        scrollLock={scrollLock}
+        onToggleScrollLock={() => setScrollLock(!scrollLock)}
         theme={theme}
         onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         onImport={() => fileInputRef.current?.click()}
@@ -137,6 +151,7 @@ export default function App() {
       >
         {/* Stays mounted in every layout so undo history and selection survive. */}
         <section
+          ref={editorPaneRef}
           aria-label="Editor"
           hidden={!showEditor}
           className={`no-print ${PANE} ${
@@ -161,6 +176,7 @@ export default function App() {
           }`}
         >
           <textarea
+            ref={sourceRef}
             aria-label="Raw markdown source"
             value={markdown}
             onChange={(event) => setMarkdown(event.target.value)}
@@ -171,7 +187,12 @@ export default function App() {
           />
         </section>
 
-        <section aria-label="Preview" hidden={!showPreview} className={`print-pane ${PANE}`}>
+        <section
+          ref={previewPaneRef}
+          aria-label="Preview"
+          hidden={!showPreview}
+          className={`print-pane ${PANE}`}
+        >
           <article
             className={`markdown-body prose prose-zinc dark:prose-invert max-w-none px-6 py-5 ${
               layout === "preview" ? "mx-auto max-w-4xl" : ""

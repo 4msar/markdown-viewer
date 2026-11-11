@@ -17,6 +17,8 @@ import {
   List,
   ListOrdered,
   ListTodo,
+  Lock,
+  LockOpen,
   Minus,
   Moon,
   PencilLine,
@@ -46,6 +48,9 @@ type ToolbarProps = {
   /** Side-by-side only: left pane shows raw markdown instead of the rich editor. */
   splitRaw: boolean;
   onToggleSplitRaw: () => void;
+  /** Side-by-side only: both panes scroll together. */
+  scrollLock: boolean;
+  onToggleScrollLock: () => void;
   theme: Theme;
   onToggleTheme: () => void;
   onImport: () => void;
@@ -68,6 +73,8 @@ export function Toolbar({
   onLayoutChange,
   splitRaw,
   onToggleSplitRaw,
+  scrollLock,
+  onToggleScrollLock,
   theme,
   onToggleTheme,
   onImport,
@@ -319,6 +326,14 @@ export function Toolbar({
           active={layout === "split" && splitRaw}
           disabled={layout !== "split"}
           onClick={onToggleSplitRaw}
+        />
+        <IconButton
+          icon={scrollLock ? Lock : LockOpen}
+          label="Scroll both panes together (side by side)"
+          toggle
+          active={layout === "split" && scrollLock}
+          disabled={layout !== "split"}
+          onClick={onToggleScrollLock}
         />
         <ToolbarDivider />
         <IconButton icon={FileUp} label="Import .md or .txt file" onClick={onImport} />
